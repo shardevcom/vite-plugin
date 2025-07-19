@@ -71,8 +71,21 @@ interface RunModuleOptions {
 
 async function runModule({ mod, mode, modulesDir, port }: RunModuleOptions) {
     const modulePath = path.resolve(modulesDir, mod)
+
+
+    const possibleConfigs = ['vite.config.ts', 'vite.config.js']
+    const configPath = possibleConfigs
+        .map(file => path.join(modulePath, file))
+        .find(fs.existsSync)
+
+    if (!configPath) {
+        console.error(chalk.red(`❌ No se encontró archivo de configuración Vite en ${modulePath}`))
+        process.exit(1)
+    }
+
     const cmd = mode === 'dev' ? 'vite' : 'vite'
-    const args = [mode, '--config', `${modulePath}/vite.config.ts`]
+
+    const args = [mode, '--config', configPath]
 
     if (mode === 'dev') {
         args.push('--port', port.toString())
