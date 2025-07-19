@@ -1,95 +1,111 @@
 # 📦 @shardev/vite-plugin
 
-Utilidades comunes para aplicaciones hechas en **React**, diseñadas para proyectos mantenidos por [Shardev](https://github.com/shardevcom). Ofrece una base sólida y desacoplada para construir aplicaciones modernas administrando estados, temas, proveedores de datos, control de accesos, enrutamientos desacoplados y más.
+> 🔌 Plugin para Vite que permite compilar múltiples módulos React independientes dentro de un proyecto Laravel monolítico.
 
 ---
 
 ## 📦 Características principales
 
-- **Persistencia y cifrado de estado global** con [`StoreProvider`](./docs/StoreProvider.md)
-- **Control de acceso** con [`AuthProvider`](./docs/AuthProvider.md) y adaptadores configurables:
-- **Integración de APIs con adaptadores customizables** con [`DataProvider`](./docs/DataProvider.md)
-- **Integración de Real Time con adaptadores customizables** con [`RealTimeProvider`](./docs/RealTimeProvider.md)
-- **Sistema de enrutamiento desacoplado** con [`RouterProvider`](./docs/RouterProvider.md)
+- Compilación modular: permite compilar todos los módulos o solo uno específico (`--module=mod1`).
+- Integración con Laravel + React.
+- Soporte para múltiples entradas Vite.
+- Compatible con entornos `dev` y `build`.
+- Permite estructura modular en `resources/react/mod1`.
+- Extensible mediante opciones.
 
 ---
 
 ## 🚀 Instalación
 
 ```bash 
-  npm install @shardev/common
+  npm install @shardev/vite-plugin
 ```
 
 ## 🛠️ Ejemplo de uso general
 
-```tsx
-// index.tsx
-import React, { Suspense } from "react";
-import { createRoot } from 'react-dom/client';
-import { rootSlices } from "./store";
-import { theme } from "./theme";
-import { StoreConfig, StoreProvider, ThemeProvider } from "@shardev/common";
-import WebApp from "./pages";
+### 1. En tu `vite.config.ts`
 
-export const appKey: string = (import.meta.env?.APP_KEY ?? 'my-secret-key');
+```ts
+import { defineConfig } from 'vite'
+import shardev from 'vite-plugin-shardev'
 
-const storeConfig: StoreConfig<typeof rootSlices> = {
-    keyName: 'my-app-name',
-    secretKey: appKey,
-    slices: rootSlices
-};
-
-createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-        <ThemeProvider initialTheme={theme}>
-            <StoreProvider config={storeConfig}>
-                <WebApp />
-            </StoreProvider>
-        </ThemeProvider>
-    </React.StrictMode>
-);
+export default defineConfig(() => {
+    return {
+        plugins: [
+            shardev({
+                base: '/',
+                moduleName: process.env.MODULE_NAME, // o usa --module=mod1
+                modulesDir: 'resources/react'
+            }),
+        ],
+    }
+})
 ```
 
 ---
 
-```tsx
-// WebApp.tsx
-import React, {useEffect, useMemo} from "react";
-import {useMemo} from 'react'
-import {
-    useGTM,
-    AuthProvider,
-    DataProvider,
-    AuthUser,
-    RouterProvider,
-    useAuthAdapter, 
-    useDataRestApi
-} from "@shardev/common";
-import {AuthAbilityAdapter} from "../adapters/auth/casl-ability";
-import routes from "../routes";
+## ⚙️ Opciones
 
-const baseUrl: string = import.meta.env.VITE_APP_URL
+| Opción       | Tipo     | Descripción                                                         | Valor por defecto        |
+|--------------|----------|---------------------------------------------------------------------|--------------------------|
+| `base`       | `string` | Ruta base para servir los assets.                                   | `'/'`                    |
+| `moduleName` | `string` | Nombre del módulo a compilar (se puede usar con `--module=mod1`).   | `'shardev'`              |
+| `modulesDir` | `string` | Carpeta raíz donde están los módulos React.                         | `'resources/react'`      |
 
-const WebApp = () => {
+---
 
-    useGTM('GTM-NQJRB7H8')
-    
-    const adapterRestAPI = useDataRestApi();
-    const authAdapter = useAuthAdapter<AuthUser>('api')
+## 🧪 Modo desarrollo
 
-    return (
-        <AuthProvider adapter={authAdapter}>
-            <DataProvider adapter={adapterRestAPI}>
-                <RouterProvider routes={routes}/>
-            </DataProvider>
-        </AuthProvider>
-    );
-}
+Puedes iniciar Vite en modo desarrollo apuntando a un solo módulo:
 
-export default WebApp;
+```bash
+npm run dev -- --module=mod1
+```
+
+Esto compilará `resources/react/mod1`.
+
+---
+
+## 🏗️ Compilación de todos los módulos
+
+```bash
+npm run build
+```
+
+Por defecto compilará **todos** los módulos dentro de `resources/react`.
+
+---
+
+## 📁 Estructura esperada
+
+```text
+resources/
+└── react/
+    ├── mod1/
+    │   └── index.tsx
+    ├── mod2/
+    │   └── index.tsx
+    └── ...
 ```
 
 ---
-## 🧾 Créditos
+## 🤝 Contribuciones
 
-**`@shardev/common`** — Mantenido por [Shardev](https://shardev.com) 🚀
+¡Contribuciones son bienvenidas! Puedes enviar:
+
+- Reportes de errores
+- Funcionalidades nuevas
+- Refactor o mejoras visuales
+
+---
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo la [MIT License](LICENSE).
+
+---
+
+## ✉️ Contacto
+
+Desarrollado por [shardev.com](https://shardev.com)  
+📫 contacto@shardev.com
