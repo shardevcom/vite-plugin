@@ -27,7 +27,7 @@
 
 ```ts
 import { defineConfig } from 'vite'
-import shardev from 'vite-plugin-shardev'
+import shardev from '@shardev/vite-plugin'
 
 export default defineConfig(() => {
     return {
