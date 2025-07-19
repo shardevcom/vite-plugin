@@ -16,6 +16,7 @@ export function shardev(userOptions: ShardevPluginOptions = {}): Plugin {
 
     const logger = createLogger(moduleName)
     let config: ResolvedConfig
+    let isDev = false
 
     return {
         name: 'vite-plugin-shardev',
@@ -25,15 +26,17 @@ export function shardev(userOptions: ShardevPluginOptions = {}): Plugin {
             config = resolved
         },
 
-        config(userConfig, { command }) {
+        config(userConfig, env) {
+            isDev = env.command === 'serve'
             return {
                 base: base || userConfig.base
             }
         },
 
+
         async buildStart() {
-            const command = process.argv.includes('dev') ? 'dev' : 'build'
-            logger.info(`🧩 Ejecutando en modo: ${command}`)
+            const mode = isDev ? 'dev' : 'build'
+            logger.info(`🧩 Ejecutando en modo: ${mode}`)
 
             const selectedModules = getModules(modulesDir)
 
@@ -53,7 +56,7 @@ export function shardev(userOptions: ShardevPluginOptions = {}): Plugin {
 
                 await runModule({
                     mod,
-                    mode: command,
+                    mode,
                     modulesDir,
                     port
                 })
@@ -69,14 +72,19 @@ interface RunModuleOptions {
     port: number
 }
 
+function getViteConfig(modulePath: string): string | undefined {
+    return [
+        'vite.config.ts',
+        'vite.config.js',
+        'vite.config.mjs',
+        'vite.config.cjs'
+    ].map(file => path.join(modulePath, file)).find(fs.existsSync)
+}
+
 async function runModule({ mod, mode, modulesDir, port }: RunModuleOptions) {
     const modulePath = path.resolve(modulesDir, mod)
 
-
-    const possibleConfigs = ['vite.config.ts', 'vite.config.js']
-    const configPath = possibleConfigs
-        .map(file => path.join(modulePath, file))
-        .find(fs.existsSync)
+    const configPath = getViteConfig(modulePath)
 
     if (!configPath) {
         console.error(chalk.red(`❌ No se encontró archivo de configuración Vite en ${modulePath}`))
@@ -112,7 +120,8 @@ function getAllModules(modulesDir: string): string[] {
     const fullPath = path.resolve(modulesDir)
     if (!fs.existsSync(fullPath)) return []
 
-    return fs.readdirSync(fullPath).filter((dir: string) =>
-        fs.existsSync(path.join(fullPath, dir, 'vite.config.ts'))
-    )
+    return fs.readdirSync(fullPath).filter((dir: string) => {
+        const modulePath = path.join(fullPath, dir)
+        return getViteConfig(modulePath) !== undefined
+    })
 }
