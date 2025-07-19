@@ -1,6 +1,6 @@
 {
   "name": "@shardev/vite-plugin",
-  "version": "7.0.2",
+  "version": "7.0.3",
   "author": "Elbert Tous",
   "license": "MIT",
   "type": "module",
